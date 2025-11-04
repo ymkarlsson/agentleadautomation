@@ -1046,4 +1046,69 @@
         }
     </script>
 </body>
-</html>
+</html><script>
+(function () {
+  const WEBHOOK_URL = "https://hook.us2.make.com/mnopr09shg2e3qonw2qc7xj36phszahj";
+
+  function getParam(name) {
+    const url = new URL(window.location.href);
+    return url.searchParams.get(name) || "";
+  }
+
+  function toE164(usPhone) {
+    const digits = (usPhone || "").replace(/\D/g, "");
+    if (!digits) return "";
+    if (digits.length === 10) return "+1" + digits;
+    if (digits.startsWith("1") && digits.length === 11) return "+" + digits;
+    return "+" + digits;
+  }
+
+  const form = document.getElementById("lead-form");
+  if (!form) return;
+
+  const statusEl = document.getElementById("form-status");
+  function setStatus(msg, ok) {
+    if (!statusEl) return;
+    statusEl.textContent = msg;
+    statusEl.style.color = ok ? "#10b981" : "#b91c1c";
+    statusEl.style.display = "block";
+  }
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const payload = {
+      source: "Website",
+      service: "Agent Lead Automation",
+      name: document.getElementById("name")?.value?.trim() || "",
+      email: document.getElementById("email")?.value?.trim() || "",
+      phone: toE164(document.getElementById("phone")?.value || ""),
+      brokerage: document.getElementById("brokerage")?.value?.trim() || "",
+      timeline: document.getElementById("timeline")?.value || "",
+      timestamp: new Date().toISOString(),
+      utm: {
+        source: getParam("utm_source"),
+        medium: getParam("utm_medium"),
+        campaign: getParam("utm_campaign"),
+      },
+      page: "main"
+    };
+
+    try {
+      const res = await fetch(WEBHOOK_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+        mode: "cors"
+      });
+
+      if (!res.ok) throw new Error("Network response was not ok");
+      setStatus("You're in! We’ll reach out shortly.", true);
+      form.reset();
+    } catch (err) {
+      console.error(err);
+      setStatus("Something went wrong. Please try again or contact us directly.", false);
+    }
+  });
+})();
+</script>
